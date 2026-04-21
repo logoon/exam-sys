@@ -9,15 +9,14 @@ import com.exam.entity.Question;
 import com.exam.entity.Subject;
 import com.exam.mapper.ExamPaperMapper;
 import com.exam.mapper.ExamPaperQuestionMapper;
-import com.exam.mapper.QuestionMapper;
 import com.exam.mapper.SubjectMapper;
 import com.exam.service.ExamPaperService;
+import com.exam.service.QuestionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class ExamPaperServiceImpl extends ServiceImpl<ExamPaperMapper, ExamPaper> implements ExamPaperService {
@@ -26,7 +25,7 @@ public class ExamPaperServiceImpl extends ServiceImpl<ExamPaperMapper, ExamPaper
     private ExamPaperQuestionMapper paperQuestionMapper;
     
     @Autowired
-    private QuestionMapper questionMapper;
+    private QuestionService questionService;
     
     @Autowired
     private SubjectMapper subjectMapper;
@@ -73,7 +72,7 @@ public class ExamPaperServiceImpl extends ServiceImpl<ExamPaperMapper, ExamPaper
             );
             
             for (ExamPaperQuestion pq : paperQuestions) {
-                Question question = questionMapper.selectById(pq.getQuestionId());
+                Question question = questionService.getQuestionDetail(pq.getQuestionId());
                 pq.setQuestion(question);
             }
             

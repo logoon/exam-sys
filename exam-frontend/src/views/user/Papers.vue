@@ -81,8 +81,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getUserPaperPage, getUserPaperWithQuestions, startExam } from '@/api/user'
-import { getSubjectList } from '@/api/admin'
+import { getUserPaperPage, getUserPaperWithQuestions, startExam, getSubjectList } from '@/api/user'
 
 const router = useRouter()
 const tableData = ref([])

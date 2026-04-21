@@ -1,5 +1,9 @@
 import request from './index'
 
+export function getSubjectList() {
+  return request.get('/user/subjects/list')
+}
+
 export function getUserPaperList(params) {
   return request.get('/user/papers/list', { params })
 }
