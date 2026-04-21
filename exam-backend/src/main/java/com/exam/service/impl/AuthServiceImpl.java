@@ -124,7 +124,6 @@ public class AuthServiceImpl implements AuthService {
         UserInfoDTO userInfoDTO = new UserInfoDTO();
         BeanUtils.copyProperties(user, userInfoDTO);
         userInfoDTO.setRoles(roles);
-        userInfoDTO.setPassword(null);
         
         return userInfoDTO;
     }
