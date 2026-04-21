@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.exam.entity.*;
 import com.exam.mapper.*;
 import com.exam.service.ExamService;
+import com.exam.service.QuestionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -42,6 +43,9 @@ public class ExamServiceImpl extends ServiceImpl<ExamRecordMapper, ExamRecord> i
     
     @Autowired
     private QuestionTypeMapper questionTypeMapper;
+    
+    @Autowired
+    private QuestionService questionService;
     
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -109,18 +113,10 @@ public class ExamServiceImpl extends ServiceImpl<ExamRecordMapper, ExamRecord> i
         );
         
         for (ExamPaperQuestion pq : paperQuestions) {
-            Question question = questionMapper.selectById(pq.getQuestionId());
+            Question question = questionService.getQuestionDetail(pq.getQuestionId());
             if (question != null) {
                 question.setAnswer(null);
                 question.setAnalysis(null);
-                if (StringUtils.hasText(question.getOptions())) {
-                    try {
-                        List<Question.Option> options = JSON.parseArray(question.getOptions(), Question.Option.class);
-                        question.setOptionList(options);
-                    } catch (Exception e) {
-                        // 忽略解析错误
-                    }
-                }
                 pq.setQuestion(question);
             }
         }
@@ -214,7 +210,7 @@ public class ExamServiceImpl extends ServiceImpl<ExamRecordMapper, ExamRecord> i
         int totalScore = 0;
         
         for (ExamAnswer answer : answers) {
-            Question question = questionMapper.selectById(answer.getQuestionId());
+            Question question = questionService.getQuestionDetail(answer.getQuestionId());
             if (question == null) {
                 continue;
             }
@@ -226,12 +222,11 @@ public class ExamServiceImpl extends ServiceImpl<ExamRecordMapper, ExamRecord> i
             );
             
             int score = pq != null ? pq.getScore() : 0;
-            
-            QuestionType type = questionTypeMapper.selectById(question.getTypeId());
             boolean isCorrect = false;
+            String typeCode = question.getTypeCode();
             
-            if (type != null) {
-                switch (type.getCode()) {
+            if (typeCode != null) {
+                switch (typeCode) {
                     case "SINGLE":
                     case "MULTIPLE":
                         if (answer.getUserAnswer() != null && answer.getUserAnswer().equals(question.getAnswer())) {
@@ -344,16 +339,8 @@ public class ExamServiceImpl extends ServiceImpl<ExamRecordMapper, ExamRecord> i
         );
         
         for (ExamAnswer answer : answers) {
-            Question question = questionMapper.selectById(answer.getQuestionId());
+            Question question = questionService.getQuestionDetail(answer.getQuestionId());
             if (question != null) {
-                if (StringUtils.hasText(question.getOptions())) {
-                    try {
-                        List<Question.Option> options = JSON.parseArray(question.getOptions(), Question.Option.class);
-                        question.setOptionList(options);
-                    } catch (Exception e) {
-                        // 忽略解析错误
-                    }
-                }
                 answer.setQuestion(question);
             }
         }
