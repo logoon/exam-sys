@@ -8,8 +8,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -24,12 +26,19 @@ public class JwtTokenUtil {
     @Value("${jwt.expiration}")
     private Long expiration;
     
-    private SecretKey getSigningKey() {
+    private SecretKey signingKey;
+    
+    @PostConstruct
+    public void init() {
         byte[] keyBytes = secret.getBytes(StandardCharsets.UTF_8);
         if (keyBytes.length < 64) {
-            return Keys.hmacShaKeyFor(Keys.secretKeyFor(SignatureAlgorithm.HS512).getEncoded());
+            byte[] paddedKey = new byte[64];
+            Arrays.fill(paddedKey, (byte) 0);
+            System.arraycopy(keyBytes, 0, paddedKey, 0, keyBytes.length);
+            this.signingKey = Keys.hmacShaKeyFor(paddedKey);
+        } else {
+            this.signingKey = Keys.hmacShaKeyFor(keyBytes);
         }
-        return Keys.hmacShaKeyFor(keyBytes);
     }
     
     public String generateToken(UserDetails userDetails) {
@@ -43,7 +52,7 @@ public class JwtTokenUtil {
                 .setSubject(subject)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
-                .signWith(getSigningKey(), SignatureAlgorithm.HS512)
+                .signWith(signingKey, SignatureAlgorithm.HS512)
                 .compact();
     }
     
@@ -62,7 +71,7 @@ public class JwtTokenUtil {
     
     private Claims getAllClaimsFromToken(String token) {
         return Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
+                .setSigningKey(signingKey)
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
